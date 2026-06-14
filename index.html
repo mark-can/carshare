@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Каршеринг: что выгоднее</title>
+<style>
+  :root{
+    --bg:#f3f1ea;
+    --surface:#ffffff;
+    --surface-soft:#ecebe3;
+    --ink:#1f2a28;
+    --muted:#6b746f;
+    --hint:#9aa19c;
+    --line:#e0ded4;
+    --sea:#0f6e56;
+    --sea-soft:#e1f0ea;
+    --warn:#854f0b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:28px 18px 48px;}
+  header{margin-bottom:24px;}
+  h1{font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
+  header p{margin:0;color:var(--muted);font-size:14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+  .panel{background:var(--surface-soft);border-radius:14px;padding:16px 16px 18px;}
+  .panel h2{font-size:14px;font-weight:600;margin:0 0 14px;}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
+  .row:last-child{margin-bottom:0;}
+  .row label{font-size:13px;color:var(--muted);}
+  input[type=number]{
+    width:96px;font-size:15px;text-align:right;padding:7px 9px;
+    border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);
+    font-family:inherit;
+  }
+  input[type=number]:focus{outline:none;border-color:var(--sea);box-shadow:0 0 0 3px var(--sea-soft);}
+  .trip{margin:12px 0 20px;}
+  .trip .grid2{gap:12px;}
+  .results{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.results{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;transition:border-color .15s;}
+  .card.win{border-color:var(--sea);border-width:2px;padding:15px;}
+  .card .top{display:flex;justify-content:space-between;align-items:center;}
+  .card .name{font-size:13px;color:var(--muted);}
+  .badge{display:none;font-size:11px;font-weight:600;padding:2px 9px;border-radius:7px;background:var(--sea-soft);color:var(--sea);}
+  .card.win .badge{display:inline-block;}
+  .price{font-size:28px;font-weight:600;margin:8px 0 4px;letter-spacing:-0.02em;}
+  .bd{font-size:12px;color:var(--hint);line-height:1.5;}
+  .verdict{margin-top:16px;font-size:14px;}
+  .verdict b{font-weight:600;color:var(--sea);}
+  .verdict .note{color:var(--muted);}
+  footer{margin-top:22px;font-size:12px;color:var(--hint);line-height:1.6;}
+  .reset{margin-top:14px;background:none;border:1px solid var(--line);border-radius:9px;padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .reset:hover{background:var(--surface);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Каршеринг: что выгоднее</h1>
+    <p>Сравнение поминутного тарифа и пакета. Все ставки редактируемые.</p>
+  </header>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Поминутный тариф</h2>
+      <div class="row"><label for="pmStart">Стартовый сбор, €</label><input type="number" id="pmStart" value="1" min="0" step="0.1"></div>
+      <div class="row"><label for="pmMin">Цена минуты, €</label><input type="number" id="pmMin" value="0.11" min="0" step="0.01"></div>
+      <div class="row"><label for="pmKm">Цена км, €</label><input type="number" id="pmKm" value="0.28" min="0" step="0.01"></div>
+    </div>
+    <div class="panel">
+      <h2>Пакет</h2>
+      <div class="row"><label for="pkCost">Стоимость пакета, €</label><input type="number" id="pkCost" value="0" min="0" step="0.01"></div>
+      <div class="row"><label for="pkHrs">Включено часов</label><input type="number" id="pkHrs" value="0" min="0" step="0.5"></div>
+      <div class="row"><label for="pkKm">Включено км</label><input type="number" id="pkKm" value="0" min="0" step="1"></div>
+      <div class="row"><label for="pkExc">Цена км сверх, €</label><input type="number" id="pkExc" value="0" min="0" step="0.01"></div>
+    </div>
+  </div>
+
+  <div class="panel trip">
+    <h2>Поездка</h2>
+    <div class="grid2">
+      <div class="row"><label for="trHrs">Часы</label><input type="number" id="trHrs" value="0" min="0" step="0.5"></div>
+      <div class="row"><label for="trKm">Километры</label><input type="number" id="trKm" value="0" min="0" step="1"></div>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="card" id="card-pm">
+      <div class="top"><span class="name">Поминутный</span><span class="badge">Выгоднее</span></div>
+      <div class="price" id="cost-pm">€—</div>
+      <div class="bd" id="bd-pm"></div>
+    </div>
+    <div class="card" id="card-pk">
+      <div class="top"><span class="name">Пакет</span><span class="badge">Выгоднее</span></div>
+      <div class="price" id="cost-pk">€—</div>
+      <div class="bd" id="bd-pk"></div>
+    </div>
+  </div>
+
+  <p class="verdict" id="verdict"></p>
+  <button class="reset" id="reset">Сбросить к значениям по умолчанию</button>
+
+  <footer>
+    Поминутный = стартовый сбор + цена минуты × минуты + цена км × км.
+    Пакет = стоимость пакета + км сверх лимита × цена км сверх + время сверх включённых часов × цена минуты
+    (после истечения оплаченного времени включается обычная поминутная ставка).
+    Цены ориентировочные — RideNow применяет динамическое ценообразование.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var defaults={pmStart:1,pmMin:0.11,pmKm:0.28,pkCost:0,pkHrs:0,pkKm:0,pkExc:0,trHrs:0,trKm:0};
+  var ids=Object.keys(defaults);
+  var el={}; ids.forEach(function(i){el[i]=document.getElementById(i);});
+  var v=function(i){return Math.max(0,parseFloat(el[i].value)||0);};
+  var fmt=function(x){return '€'+x.toFixed(2);};
+  var KEY='carshare-calc-v1';
+
+  function load(){
+    try{
+      var s=JSON.parse(localStorage.getItem(KEY)||'{}');
+      ids.forEach(function(i){if(s[i]!==undefined)el[i].value=s[i];});
+    }catch(e){}
+  }
+  function save(){
+    var s={}; ids.forEach(function(i){s[i]=el[i].value;});
+    try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}
+  }
+
+  function calc(){
+    var hrs=v('trHrs'), km=v('trKm');
+    var pm=v('pmStart')+hrs*60*v('pmMin')+km*v('pmKm');
+    var excKm=Math.max(0,km-v('pkKm'));
+    var overMin=Math.max(0,(hrs-v('pkHrs'))*60);
+    var pk=v('pkCost')+excKm*v('pkExc')+overMin*v('pmMin');
+
+    document.getElementById('cost-pm').textContent=fmt(pm);
+    document.getElementById('bd-pm').textContent=fmt(v('pmStart'))+' старт + '+fmt(v('pmMin'))+'×'+Math.round(hrs*60)+' мин + '+fmt(v('pmKm'))+'×'+km+' км';
+
+    var pkBd=fmt(v('pkCost'));
+    if(excKm>0)pkBd+=' + '+fmt(v('pkExc'))+'×'+excKm+' км сверх';
+    if(overMin>0)pkBd+=' + '+fmt(v('pmMin'))+'×'+Math.round(overMin)+' мин сверх';
+    if(excKm===0&&overMin===0)pkBd+=' (всё в лимите)';
+    document.getElementById('cost-pk').textContent=fmt(pk);
+    document.getElementById('bd-pk').textContent=pkBd;
+
+    var cpm=document.getElementById('card-pm'), cpk=document.getElementById('card-pk');
+    cpm.classList.remove('win'); cpk.classList.remove('win');
+    var diff=Math.abs(pm-pk), vd=document.getElementById('verdict');
+    if(pm<pk){cpm.classList.add('win'); vd.innerHTML='Поминутный дешевле на <b>'+fmt(diff)+'</b>.';}
+    else if(pk<pm){cpk.classList.add('win'); vd.innerHTML='Пакет дешевле на <b>'+fmt(diff)+'</b>.';}
+    else{vd.textContent='Цена одинаковая.';}
+    if(overMin>0)vd.innerHTML+=' <span class="note">Время сверх лимита добавлено по поминутной ставке.</span>';
+
+    save();
+  }
+
+  ids.forEach(function(i){el[i].addEventListener('input',calc);});
+  document.getElementById('reset').addEventListener('click',function(){
+    ids.forEach(function(i){el[i].value=defaults[i];}); calc();
+  });
+
+  load(); calc();
+})();
+</script>
+</body>
+</html>
