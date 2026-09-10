@@ -1,178 +1,718 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Каршеринг: что выгоднее</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airing Year — find anime by year and genre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --bg:#f3f1ea;
-    --surface:#ffffff;
-    --surface-soft:#ecebe3;
-    --ink:#1f2a28;
-    --muted:#6b746f;
-    --hint:#9aa19c;
-    --line:#e0ded4;
-    --sea:#0f6e56;
-    --sea-soft:#e1f0ea;
-    --warn:#854f0b;
+:root{
+  --paper:#E3E6E1;
+  --panel:#F1F3EF;
+  --row:#FAFBF9;
+  --ink:#15181B;
+  --ink-soft:#5C6369;
+  --ink-faint:#8B9299;
+  --indigo:#26364F;
+  --indigo-soft:#4C6285;
+  --wine:#8A2B3F;
+  --line:#C9CEC7;
+  --line-soft:#DFE3DC;
+  --radius:3px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+}
+
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 80px}
+
+/* ---------- header ---------- */
+
+.masthead{
+  display:flex;
+  align-items:baseline;
+  gap:14px;
+  flex-wrap:wrap;
+  padding-bottom:14px;
+  border-bottom:2px solid var(--indigo);
+}
+.masthead h1{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0}
+.masthead p{margin:0;font-size:13px;color:var(--ink-soft);max-width:46ch;flex:1 1 240px}
+
+.lang{display:flex;gap:0;align-self:center}
+.lang button{
+  font:inherit;
+  font-size:12px;
+  font-weight:500;
+  padding:3px 10px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink-soft);
+  cursor:pointer;
+}
+.lang button:first-child{border-radius:var(--radius) 0 0 var(--radius)}
+.lang button:last-child{border-radius:0 var(--radius) var(--radius) 0;border-left:none}
+.lang button[aria-pressed="true"]{background:var(--indigo);border-color:var(--indigo);color:#fff}
+
+/* ---------- controls ---------- */
+
+.controls{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-top:none;
+  padding:18px;
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:500;color:var(--ink-soft)}
+
+select{
+  font:inherit;font-size:14px;color:var(--ink);
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:7px 9px;width:100%;
+}
+select:focus-visible,button:focus-visible,input:focus-visible{
+  outline:2px solid var(--indigo-soft);outline-offset:2px;
+}
+
+.formats{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.formats > span{font-size:12px;font-weight:500;color:var(--ink-soft);margin-right:4px}
+.chip{position:relative;display:inline-flex}
+.chip input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.chip span{
+  padding:4px 11px;font-size:13px;
+  border:1px solid var(--line);border-radius:999px;
+  background:#fff;color:var(--ink-soft);user-select:none;
+}
+.chip input:checked + span{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.chip input:focus-visible + span{outline:2px solid var(--indigo-soft);outline-offset:2px}
+
+.actions{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+button.go{
+  font:inherit;font-weight:700;font-size:15px;color:#fff;
+  background:var(--indigo);border:none;border-radius:var(--radius);
+  padding:10px 26px;cursor:pointer;
+}
+button.go:hover{background:#1B2839}
+button.go:disabled{background:var(--ink-faint);cursor:default}
+
+.hint{font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- status ---------- */
+
+.status{
+  margin-top:22px;padding:20px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  font-size:14px;color:var(--ink-soft);
+}
+.status.error{background:#F7ECEE;border-color:#D9B2BA;color:#6E2331}
+.status strong{color:var(--ink);font-weight:700}
+
+/* ---------- results ---------- */
+
+.resmeta{
+  display:flex;justify-content:space-between;align-items:baseline;
+  gap:12px;flex-wrap:wrap;margin:26px 0 8px;
+}
+.resmeta h2{font-size:16px;font-weight:700;margin:0}
+.resmeta .count{font-size:12.5px;color:var(--ink-faint)}
+
+ol.results{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+
+li.item{
+  display:grid;
+  grid-template-columns:34px 46px 1fr 120px 76px;
+  gap:14px;align-items:center;
+  padding:11px 8px;
+  background:var(--row);
+  border-bottom:1px solid var(--line-soft);
+}
+li.item:nth-child(even){background:transparent}
+
+.rank{
+  font-family:Antonio,sans-serif;font-size:22px;font-weight:400;
+  color:var(--ink-faint);text-align:right;font-variant-numeric:tabular-nums;
+}
+li.item:nth-child(-n+3) .rank{color:var(--wine);font-weight:600}
+
+.cover{
+  width:46px;height:64px;object-fit:cover;border-radius:2px;
+  background:var(--line-soft);display:block;
+}
+
+.meta{min-width:0}
+.meta a.title{
+  color:var(--ink);font-weight:700;font-size:14.5px;line-height:1.3;
+  text-decoration:none;display:block;
+}
+.meta a.title:hover{color:var(--wine);text-decoration:underline}
+.sub{font-size:12px;color:var(--ink-faint);margin-top:2px}
+.sub a{color:var(--ink-faint)}
+.tags{font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+.carry{
+  display:inline-block;font-size:11px;font-weight:500;
+  color:var(--wine);border:1px solid #D6B4BC;background:#F8EEF0;
+  border-radius:2px;padding:0 5px;margin-left:6px;vertical-align:1px;
+}
+.carry.live{color:#1F4D3A;border-color:#A8C9B6;background:#EDF5F0}
+
+.span{position:relative;height:26px}
+.span-label{font-size:11px;color:var(--ink-faint);margin-bottom:3px;white-space:nowrap}
+.span-track{
+  position:relative;height:7px;background:var(--line-soft);
+  border-left:1px solid var(--line);border-right:1px solid var(--line);
+}
+.span-fill{position:absolute;top:0;height:7px;background:var(--indigo-soft)}
+.span-fill.live{background:var(--wine)}
+.spill{position:absolute;top:0;width:0;height:0;
+  border-top:3.5px solid transparent;border-bottom:3.5px solid transparent}
+.spill.l{left:-6px;border-right:6px solid var(--indigo-soft)}
+.spill.r{right:-6px;border-left:6px solid var(--indigo-soft)}
+
+.score{text-align:right}
+.score b{
+  font-family:Antonio,sans-serif;font-size:26px;font-weight:600;
+  color:var(--indigo);display:block;line-height:1;font-variant-numeric:tabular-nums;
+}
+.score span{font-size:11.5px;color:var(--ink-faint);white-space:nowrap}
+.score.thin b{color:var(--ink-faint)}
+
+footer{
+  margin-top:32px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-faint);
+}
+footer a{color:var(--indigo-soft)}
+
+@media (max-width:860px){
+  li.item{
+    grid-template-columns:28px 42px 1fr auto;
+    grid-template-areas:"rank cover meta score" ". . span span";
+    row-gap:6px;
   }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:680px;margin:0 auto;padding:28px 18px 48px;}
-  header{margin-bottom:24px;}
-  h1{font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
-  header p{margin:0;color:var(--muted);font-size:14px;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  @media(max-width:560px){.grid2{grid-template-columns:1fr;}}
-  .panel{background:var(--surface-soft);border-radius:14px;padding:16px 16px 18px;}
-  .panel h2{font-size:14px;font-weight:600;margin:0 0 14px;}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
-  .row:last-child{margin-bottom:0;}
-  .row label{font-size:13px;color:var(--muted);}
-  input[type=number]{
-    width:96px;font-size:15px;text-align:right;padding:7px 9px;
-    border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);
-    font-family:inherit;
-  }
-  input[type=number]:focus{outline:none;border-color:var(--sea);box-shadow:0 0 0 3px var(--sea-soft);}
-  .trip{margin:12px 0 20px;}
-  .trip .grid2{gap:12px;}
-  .results{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  @media(max-width:560px){.results{grid-template-columns:1fr;}}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;transition:border-color .15s;}
-  .card.win{border-color:var(--sea);border-width:2px;padding:15px;}
-  .card .top{display:flex;justify-content:space-between;align-items:center;}
-  .card .name{font-size:13px;color:var(--muted);}
-  .badge{display:none;font-size:11px;font-weight:600;padding:2px 9px;border-radius:7px;background:var(--sea-soft);color:var(--sea);}
-  .card.win .badge{display:inline-block;}
-  .price{font-size:28px;font-weight:600;margin:8px 0 4px;letter-spacing:-0.02em;}
-  .bd{font-size:12px;color:var(--hint);line-height:1.5;}
-  .verdict{margin-top:16px;font-size:14px;}
-  .verdict b{font-weight:600;color:var(--sea);}
-  .verdict .note{color:var(--muted);}
-  footer{margin-top:22px;font-size:12px;color:var(--hint);line-height:1.6;}
-  .reset{margin-top:14px;background:none;border:1px solid var(--line);border-radius:9px;padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;}
-  .reset:hover{background:var(--surface);}
+  .rank{grid-area:rank}
+  .cover{grid-area:cover}
+  .meta{grid-area:meta}
+  .score{grid-area:score}
+  .span{grid-area:span}
+}
+@media (max-width:520px){ .wrap{padding:20px 14px 60px} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-</head>
-<body>
+
 <div class="wrap">
-  <header>
-    <h1>Каршеринг: что выгоднее</h1>
-    <p>Сравнение поминутного тарифа и пакета. Все ставки редактируемые.</p>
-  </header>
 
-  <div class="grid2">
-    <div class="panel">
-      <h2>Поминутный тариф</h2>
-      <div class="row"><label for="pmStart">Стартовый сбор, €</label><input type="number" id="pmStart" value="1" min="0" step="0.1"></div>
-      <div class="row"><label for="pmMin">Цена минуты, €</label><input type="number" id="pmMin" value="0.11" min="0" step="0.01"></div>
-      <div class="row"><label for="pmKm">Цена км, €</label><input type="number" id="pmKm" value="0.28" min="0" step="0.01"></div>
-    </div>
-    <div class="panel">
-      <h2>Пакет</h2>
-      <div class="row"><label for="pkCost">Стоимость пакета, €</label><input type="number" id="pkCost" value="0" min="0" step="0.01"></div>
-      <div class="row"><label for="pkHrs">Включено часов</label><input type="number" id="pkHrs" value="0" min="0" step="0.5"></div>
-      <div class="row"><label for="pkKm">Включено км</label><input type="number" id="pkKm" value="0" min="0" step="1"></div>
-      <div class="row"><label for="pkExc">Цена км сверх, €</label><input type="number" id="pkExc" value="0" min="0" step="0.01"></div>
-    </div>
+<div class="masthead">
+  <h1 data-t="appTitle"></h1>
+  <p data-t="tagline"></p>
+  <div class="lang">
+    <button id="lang-en" type="button" aria-pressed="true">EN</button>
+    <button id="lang-ru" type="button" aria-pressed="false">RU</button>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="field">
+    <label for="year" data-t="lblYear"></label>
+    <select id="year"></select>
+  </div>
+  <div class="field">
+    <label for="genre" data-t="lblGenre"></label>
+    <select id="genre"></select>
+  </div>
+  <div class="field">
+    <label for="minvotes" data-t="lblMinVotes"></label>
+    <select id="minvotes">
+      <option value="0" data-t="noMinimum"></option>
+      <option value="100">100</option>
+      <option value="1000" selected>1 000</option>
+      <option value="5000">5 000</option>
+      <option value="10000">10 000</option>
+      <option value="50000">50 000</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="airstatus" data-t="lblStatus"></label>
+    <select id="airstatus">
+      <option value="any" selected data-t="stAny"></option>
+      <option value="finished" data-t="stFinished"></option>
+      <option value="ongoing" data-t="stOngoing"></option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="sort" data-t="lblSort"></label>
+    <select id="sort">
+      <option value="score" selected data-t="sortScore"></option>
+      <option value="bayes" data-t="sortBayes"></option>
+      <option value="votes" data-t="sortVotes"></option>
+    </select>
   </div>
 
-  <div class="panel trip">
-    <h2>Поездка</h2>
-    <div class="grid2">
-      <div class="row"><label for="trHrs">Часы</label><input type="number" id="trHrs" value="0" min="0" step="0.5"></div>
-      <div class="row"><label for="trKm">Километры</label><input type="number" id="trKm" value="0" min="0" step="1"></div>
-    </div>
+  <div class="formats" id="formats"><span data-t="lblFormats"></span></div>
+
+  <div class="actions">
+    <button class="go" id="go" data-t="btnGo"></button>
+    <span class="hint" data-t="hint"></span>
   </div>
+</div>
 
-  <div class="results">
-    <div class="card" id="card-pm">
-      <div class="top"><span class="name">Поминутный</span><span class="badge">Выгоднее</span></div>
-      <div class="price" id="cost-pm">€—</div>
-      <div class="bd" id="bd-pm"></div>
-    </div>
-    <div class="card" id="card-pk">
-      <div class="top"><span class="name">Пакет</span><span class="badge">Выгоднее</span></div>
-      <div class="price" id="cost-pk">€—</div>
-      <div class="bd" id="bd-pk"></div>
-    </div>
-  </div>
+<div id="status" class="status"></div>
+<div id="out"></div>
 
-  <p class="verdict" id="verdict"></p>
-  <button class="reset" id="reset">Сбросить к значениям по умолчанию</button>
+<footer data-t="footer"></footer>
 
-  <footer>
-    Поминутный = стартовый сбор + цена минуты × минуты + цена км × км.
-    Пакет = стоимость пакета + км сверх лимита × цена км сверх + время сверх включённых часов × цена минуты
-    (после истечения оплаченного времени включается обычная поминутная ставка).
-    Цены ориентировочные — RideNow применяет динамическое ценообразование.
-  </footer>
 </div>
 
 <script>
-(function(){
-  var defaults={pmStart:1,pmMin:0.11,pmKm:0.28,pkCost:0,pkHrs:0,pkKm:0,pkExc:0,trHrs:0,trKm:0};
-  var ids=Object.keys(defaults);
-  var el={}; ids.forEach(function(i){el[i]=document.getElementById(i);});
-  var v=function(i){return Math.max(0,parseFloat(el[i].value)||0);};
-  var fmt=function(x){return '€'+x.toFixed(2);};
-  var KEY='carshare-calc-v1';
+const API = "https://graphql.anilist.co";
 
-  function load(){
-    try{
-      var s=JSON.parse(localStorage.getItem(KEY)||'{}');
-      ids.forEach(function(i){if(s[i]!==undefined)el[i].value=s[i];});
-    }catch(e){}
+/* ---------------- i18n ---------------- */
+
+const T = {
+  en: {
+    docTitle: "Airing Year — find anime by year and genre",
+    appTitle: "Airing Year",
+    tagline: "The best anime of a given year by genre — including shows that started earlier and kept airing.",
+    lblYear: "Year", lblGenre: "Genre", lblMinVotes: "Minimum ratings",
+    lblStatus: "Airing status", lblSort: "Sort by", lblFormats: "Formats",
+    noMinimum: "no minimum",
+    stAny: "Any", stFinished: "Fully aired", stOngoing: "Still airing",
+    sortScore: "Score", sortBayes: "Score, weighted by rating count", sortVotes: "Number of ratings",
+    fmt: {TV:"TV", TV_SHORT:"Shorts", MOVIE:"Movies", ONA:"ONA", OVA:"OVA", SPECIAL:"Specials"},
+    btnGo: "Show results",
+    hint: "Top 50 by AniList score",
+    idle: "Pick a year and a genre, then hit Show results.",
+    loading: "Querying AniList…",
+    loadingN: n => `Querying AniList… ${n} found`,
+    noFormats: "Pick at least one format.",
+    empty: "<strong>Nothing matched.</strong> Lower the ratings threshold or add formats — for older years and rarer genres, 1,000 ratings is often too high a bar.",
+    rateLimit: s => `AniList rate limit hit. Wait ${s}s and try again.`,
+    httpErr: s => `AniList returned error ${s}.`,
+    netErr: "Could not reach AniList. Check your connection and try again.",
+    allGenres: "All genres",
+    months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    ongoingDate: a => `${a} – ongoing`,
+    dateRange: (a,b) => `${a} – ${b}`,
+    bAiring: "airing", bHiatus: "on hiatus", bCancelled: "unfinished",
+    bSince: y => `since ${y}`,
+    epsDone: n => `${n} eps, all aired`,
+    epsLive: n => `${n} eps announced`,
+    epsTBA: "episode count TBA",
+    ratings: n => `${n} ratings`, noRatings: "no ratings",
+    headline: (g,y) => `${g}, ${y}`,
+    count: (n,mv) => `${n} titles${mv ? `, ${mv}+ ratings` : ""}`,
+    footer: 'Data from <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>. Scores are rescaled to 10. “Ratings” is the sum of the score distribution — how many people actually scored the show, not how many added it to a list.',
+    locale: "en-US"
+  },
+  ru: {
+    docTitle: "Что выходило — поиск аниме по году и жанру",
+    appTitle: "Что выходило",
+    tagline: "Лучшее аниме года по жанру — включая сериалы, которые начались раньше, но продолжали выходить.",
+    lblYear: "Год", lblGenre: "Жанр", lblMinVotes: "Минимум оценок",
+    lblStatus: "Статус показа", lblSort: "Сортировка", lblFormats: "Форматы",
+    noMinimum: "без ограничения",
+    stAny: "Любой", stFinished: "Все серии вышли", stOngoing: "Ещё выходит",
+    sortScore: "По оценке", sortBayes: "С поправкой на число оценок", sortVotes: "По числу оценок",
+    fmt: {TV:"ТВ", TV_SHORT:"Короткие", MOVIE:"Фильмы", ONA:"ONA", OVA:"OVA", SPECIAL:"Спецвыпуски"},
+    btnGo: "Показать",
+    hint: "Топ-50 по оценкам AniList",
+    idle: "Выбери год и жанр, потом нажми «Показать».",
+    loading: "Запрашиваю AniList…",
+    loadingN: n => `Запрашиваю AniList… найдено ${n}`,
+    noFormats: "Выбери хотя бы один формат.",
+    empty: "<strong>Ничего не нашлось.</strong> Понизь порог оценок или добавь форматы — для старых лет и редких жанров 1 000 оценок часто слишком много.",
+    rateLimit: s => `Лимит запросов AniList исчерпан. Подожди ${s} с и повтори.`,
+    httpErr: s => `AniList ответил ошибкой ${s}.`,
+    netErr: "Не удалось получить данные. Проверь соединение и повтори.",
+    allGenres: "Все жанры",
+    months: ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],
+    ongoingDate: a => `${a} — идёт`,
+    dateRange: (a,b) => `${a} — ${b}`,
+    bAiring: "идёт", bHiatus: "перерыв", bCancelled: "не закончено",
+    bSince: y => `с ${y}`,
+    epsDone: n => `${n} эп., все вышли`,
+    epsLive: n => `${n} эп. заявлено`,
+    epsTBA: "число серий не объявлено",
+    ratings: n => `${n} оценок`, noRatings: "нет оценок",
+    headline: (g,y) => `${g}, ${y}`,
+    count: (n,mv) => `${n} тайтлов${mv ? `, от ${mv} оценок` : ""}`,
+    footer: 'Данные — <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>. Оценка приведена к десятибалльной шкале. «Оценок» — сумма по распределению оценок, то есть сколько человек реально поставили балл, а не сколько добавили в список.',
+    locale: "ru-RU"
   }
-  function save(){
-    var s={}; ids.forEach(function(i){s[i]=el[i].value;});
-    try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}
+};
+
+let lang = new URLSearchParams(location.search).get("lang") === "ru" ? "ru" : "en";
+const t = () => T[lang];
+
+const GENRES = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror",
+  "Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi",
+  "Slice of Life","Sports","Supernatural","Thriller"];
+
+const GENRE_RU = {
+  "Action":"Экшен","Adventure":"Приключения","Comedy":"Комедия","Drama":"Драма",
+  "Ecchi":"Этти","Fantasy":"Фэнтези","Horror":"Хоррор","Mahou Shoujo":"Махо-сёдзё",
+  "Mecha":"Меха","Music":"Музыка","Mystery":"Детектив","Psychological":"Психологическое",
+  "Romance":"Романтика","Sci-Fi":"Фантастика","Slice of Life":"Повседневность",
+  "Sports":"Спорт","Supernatural":"Мистика","Thriller":"Триллер"
+};
+const gName = g => lang === "ru" ? (GENRE_RU[g] || g) : g;
+
+const FORMATS = [
+  {v:"TV", on:true}, {v:"TV_SHORT", on:false}, {v:"MOVIE", on:true},
+  {v:"ONA", on:true}, {v:"OVA", on:false}, {v:"SPECIAL", on:false}
+];
+
+/* ---------------- query ---------------- */
+
+const FIELDS = `
+      id idMal siteUrl format episodes status averageScore popularity
+      title{ romaji english }
+      startDate{ year month day }
+      endDate{ year month day }
+      genres
+      coverImage{ medium }
+      stats{ scoreDistribution{ amount } }`;
+
+// Only declare the filters we actually use. An explicitly-passed null is
+// ambiguous — AniList may or may not treat it as "no filter" — so omit instead.
+function buildQuery(f) {
+  const decl = ["$page:Int"], args = ["type:ANIME", "isAdult:false", "sort:SCORE_DESC"];
+  if (f.genre)    { decl.push("$genre:String");           args.push("genre:$genre"); }
+  if (f.startLt)  { decl.push("$startLt:FuzzyDateInt");   args.push("startDate_lesser:$startLt"); }
+  if (f.endGt)    { decl.push("$endGt:FuzzyDateInt");     args.push("endDate_greater:$endGt"); }
+  if (f.statusIn) { decl.push("$statusIn:[MediaStatus]"); args.push("status_in:$statusIn"); }
+  return `query (${decl.join(",")}){
+  Page(page:$page, perPage:50){
+    pageInfo{ hasNextPage }
+    media(${args.join(", ")}){${FIELDS}
+    }
   }
+}`;
+}
 
-  function calc(){
-    var hrs=v('trHrs'), km=v('trKm');
-    var pm=v('pmStart')+hrs*60*v('pmMin')+km*v('pmKm');
-    var excKm=Math.max(0,km-v('pkKm'));
-    var overMin=Math.max(0,(hrs-v('pkHrs'))*60);
-    var pk=v('pkCost')+excKm*v('pkExc')+overMin*v('pmMin');
+const cache = new Map();
+let lastCall = 0;
+let lastResult = null;   // kept so switching language re-renders without refetching
 
-    document.getElementById('cost-pm').textContent=fmt(pm);
-    document.getElementById('bd-pm').textContent=fmt(v('pmStart'))+' старт + '+fmt(v('pmMin'))+'×'+Math.round(hrs*60)+' мин + '+fmt(v('pmKm'))+'×'+km+' км';
+/* ---------------- setup ---------------- */
 
-    var pkBd=fmt(v('pkCost'));
-    if(excKm>0)pkBd+=' + '+fmt(v('pkExc'))+'×'+excKm+' км сверх';
-    if(overMin>0)pkBd+=' + '+fmt(v('pmMin'))+'×'+Math.round(overMin)+' мин сверх';
-    if(excKm===0&&overMin===0)pkBd+=' (всё в лимите)';
-    document.getElementById('cost-pk').textContent=fmt(pk);
-    document.getElementById('bd-pk').textContent=pkBd;
+const $ = id => document.getElementById(id);
+const nowYear = new Date().getFullYear();
 
-    var cpm=document.getElementById('card-pm'), cpk=document.getElementById('card-pk');
-    cpm.classList.remove('win'); cpk.classList.remove('win');
-    var diff=Math.abs(pm-pk), vd=document.getElementById('verdict');
-    if(pm<pk){cpm.classList.add('win'); vd.innerHTML='Поминутный дешевле на <b>'+fmt(diff)+'</b>.';}
-    else if(pk<pm){cpk.classList.add('win'); vd.innerHTML='Пакет дешевле на <b>'+fmt(diff)+'</b>.';}
-    else{vd.textContent='Цена одинаковая.';}
-    if(overMin>0)vd.innerHTML+=' <span class="note">Время сверх лимита добавлено по поминутной ставке.</span>';
+for (let y = nowYear; y >= 1990; y--) {
+  $("year").insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+}
 
-    save();
-  }
+FORMATS.forEach(f => {
+  $("formats").insertAdjacentHTML("beforeend",
+    `<label class="chip"><input type="checkbox" value="${f.v}"${f.on ? " checked" : ""}><span data-fmt="${f.v}"></span></label>`);
+});
 
-  ids.forEach(function(i){el[i].addEventListener('input',calc);});
-  document.getElementById('reset').addEventListener('click',function(){
-    ids.forEach(function(i){el[i].value=defaults[i];}); calc();
+function applyLang() {
+  const d = t();
+  document.documentElement.lang = lang;
+  document.title = d.docTitle;
+
+  document.querySelectorAll("[data-t]").forEach(el => {
+    const v = d[el.dataset.t];
+    if (typeof v !== "string") return;
+    if (el.dataset.t === "footer") el.innerHTML = v; else el.textContent = v;
+  });
+  document.querySelectorAll("[data-fmt]").forEach(el => {
+    el.textContent = d.fmt[el.dataset.fmt];
   });
 
-  load(); calc();
-})();
+  // genre list, preserving the current pick
+  const g = $("genre"), keep = g.value || "Action";
+  g.innerHTML = `<option value="">${d.allGenres}</option>` +
+    GENRES.map(x => `<option value="${x}">${gName(x)}</option>`).join("");
+  g.value = keep;
+
+  $("lang-en").setAttribute("aria-pressed", lang === "en");
+  $("lang-ru").setAttribute("aria-pressed", lang === "ru");
+
+  if (lastResult) {
+    $("out").innerHTML = render(lastResult.list, lastResult.year, lastResult.genre, lastResult.minVotes);
+  } else {
+    $("status").className = "status";
+    $("status").textContent = d.idle;
+  }
+}
+
+["en","ru"].forEach(L => $("lang-" + L).addEventListener("click", () => {
+  if (lang === L) return;
+  lang = L;
+  const u = new URL(location);
+  L === "en" ? u.searchParams.delete("lang") : u.searchParams.set("lang", "ru");
+  history.replaceState(null, "", u);
+  applyLang();
+}));
+
+/* ---------------- helpers ---------------- */
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const nfmt = n => n.toLocaleString(t().locale);
+
+function fd(o, endOfPeriod) {
+  if (!o || !o.year) return null;
+  return {
+    y: o.year,
+    m: o.month || (endOfPeriod ? 12 : 1),
+    d: o.day   || (endOfPeriod ? 31 : 1)
+  };
+}
+const toNum = d => d ? d.y * 10000 + d.m * 100 + d.d : null;
+
+function dateLabel(s, e, live) {
+  const d = t();
+  const a = s ? `${d.months[s.m - 1]} ${s.y}` : "?";
+  if (live) return d.ongoingDate(a);
+  if (!e) return a;
+  const b = `${d.months[e.m - 1]} ${e.y}`;
+  return a === b ? a : d.dateRange(a, b);
+}
+
+function votesOf(m) {
+  const dist = m.stats && m.stats.scoreDistribution;
+  if (!dist || !dist.length) return 0;
+  return dist.reduce((s, x) => s + (x.amount || 0), 0);
+}
+
+async function gql(vars) {
+  const clean = {};
+  for (const k in vars) if (vars[k] != null) clean[k] = vars[k];
+
+  const key = JSON.stringify(clean);
+  if (cache.has(key)) return cache.get(key);
+
+  const gap = 450 - (Date.now() - lastCall);
+  if (gap > 0) await new Promise(r => setTimeout(r, gap));
+  lastCall = Date.now();
+
+  const res = await fetch(API, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Accept": "application/json"},
+    body: JSON.stringify({query: buildQuery(clean), variables: clean})
+  });
+
+  if (res.status === 429) {
+    throw new Error(t().rateLimit(parseInt(res.headers.get("Retry-After") || "20", 10)));
+  }
+  if (!res.ok) throw new Error(t().httpErr(res.status));
+
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+
+  cache.set(key, json.data.Page);
+  return json.data.Page;
+}
+
+/* ---------------- fetching ---------------- */
+
+// Two passes, because endDate_greater silently drops anime with no end date.
+// Pass 1 catches everything with a known end date that overlaps the year.
+// Pass 2 catches everything still on air that had started by the end of the year.
+// When the status filter rules out one of the two, skip that request entirely.
+async function collect(year, genre, statusMode, onProgress) {
+  const startLt = year * 10000 + 1231;
+  const endGt   = year * 10000 + 101;
+  const found = new Map();
+
+  const passes = [];
+  if (statusMode !== "ongoing")  passes.push({startLt, endGt, statusIn: null});
+  if (statusMode !== "finished") passes.push({startLt, endGt: null, statusIn: ["RELEASING","HIATUS"]});
+
+  for (const p of passes) {
+    for (let page = 1; page <= 4; page++) {
+      onProgress(found.size);
+      const data = await gql({
+        page, genre: genre || null,
+        startLt: p.startLt, endGt: p.endGt, statusIn: p.statusIn
+      });
+      data.media.forEach(m => { if (!found.has(m.id)) found.set(m.id, m); });
+      if (!data.pageInfo.hasNextPage) break;
+    }
+  }
+  return [...found.values()];
+}
+
+/* ---------------- rendering ---------------- */
+
+function spanBar(s, e, year, live) {
+  const y0 = year * 10000 + 101, y1 = year * 10000 + 1231;
+  const sn = toNum(s), en = live ? y1 + 1 : (toNum(e) ?? y1);
+
+  const dayOf = n => {
+    if (n == null) return 0;
+    const yy = Math.floor(n / 10000), mm = Math.floor(n / 100) % 100, dd = n % 100;
+    return (yy - year) * 365 + (mm - 1) * 30.4 + dd;
+  };
+  let L = Math.max(0, Math.min(100, dayOf(sn) / 365 * 100));
+  let R = Math.max(0, Math.min(100, dayOf(en) / 365 * 100));
+  if (R - L < 3) R = Math.min(100, L + 3);
+
+  const spillL = sn != null && sn < y0;
+  const spillR = live || (toNum(e) != null && toNum(e) > y1);
+
+  return `<div class="span">
+    <div class="span-label">${esc(dateLabel(s, e, live))}</div>
+    <div class="span-track">
+      <div class="span-fill${live ? " live" : ""}" style="left:${L}%;width:${R - L}%"></div>
+      ${spillL ? '<i class="spill l"></i>' : ""}
+      ${spillR ? '<i class="spill r"></i>' : ""}
+    </div>
+  </div>`;
+}
+
+function render(list, year, genre, minVotes) {
+  const d = t();
+  let html = `<div class="resmeta">
+      <h2>${esc(d.headline(genre ? gName(genre) : d.allGenres.toLowerCase(), year))}</h2>
+      <span class="count">${esc(d.count(list.length, minVotes ? nfmt(minVotes) : 0))}</span>
+    </div><ol class="results">`;
+
+  list.forEach((m, i) => {
+    const title = m.title.english || m.title.romaji;
+    const live = m._live;
+    const carry = m._start && m._start.y < year;
+    const thin = m._votes < 1000;
+
+    let badge = "";
+    if (m.status === "RELEASING")      badge = `<span class="carry live">${d.bAiring}</span>`;
+    else if (m.status === "HIATUS")    badge = `<span class="carry live">${d.bHiatus}</span>`;
+    else if (m.status === "CANCELLED") badge = `<span class="carry">${d.bCancelled}</span>`;
+
+    const eps = m.episodes
+      ? (live ? d.epsLive(m.episodes) : d.epsDone(m.episodes))
+      : (live ? d.epsTBA : "");
+    const fmt = m.format ? m.format.replace("TV_SHORT", "TV short") : "";
+
+    html += `<li class="item">
+      <div class="rank">${i + 1}</div>
+      <img class="cover" loading="lazy" alt="" src="${esc(m.coverImage?.medium || "")}">
+      <div class="meta">
+        <a class="title" href="${esc(m.siteUrl)}" target="_blank" rel="noopener">${esc(title)}</a>${
+          carry ? `<span class="carry">${d.bSince(m._start.y)}</span>` : ""}${badge}
+        <div class="sub">${esc([fmt, eps].filter(Boolean).join(" · "))}${
+          m.idMal ? ` · <a href="https://myanimelist.net/anime/${m.idMal}" target="_blank" rel="noopener">MAL</a>` : ""}</div>
+        <div class="tags">${esc(m.genres.slice(0, 4).map(gName).join(", "))}</div>
+      </div>
+      ${spanBar(m._start, m._end, year, live)}
+      <div class="score${thin ? " thin" : ""}">
+        <b>${m._score ? m._score.toFixed(1) : "—"}</b>
+        <span>${m._votes ? esc(d.ratings(nfmt(m._votes))) : d.noRatings}</span>
+      </div>
+    </li>`;
+  });
+
+  return html + "</ol>";
+}
+
+/* ---------------- main ---------------- */
+
+async function run() {
+  const d = t();
+  const year = +$("year").value;
+  const genre = $("genre").value;
+  const minVotes = +$("minvotes").value;
+  const sortMode = $("sort").value;
+  const statusMode = $("airstatus").value;
+  const formats = [...document.querySelectorAll("#formats input:checked")].map(c => c.value);
+
+  const status = $("status"), out = $("out"), btn = $("go");
+  status.style.display = "";
+
+  if (!formats.length) {
+    status.className = "status error";
+    status.textContent = d.noFormats;
+    out.innerHTML = "";
+    lastResult = null;
+    return;
+  }
+
+  btn.disabled = true;
+  out.innerHTML = "";
+  lastResult = null;
+  status.className = "status";
+  status.textContent = d.loading;
+
+  try {
+    const raw = await collect(year, genre, statusMode, n => {
+      status.textContent = d.loadingN(n);
+    });
+
+    raw.forEach(m => {
+      m._start = fd(m.startDate, false);
+      m._end   = fd(m.endDate, true);
+      m._votes = votesOf(m);
+      m._score = m.averageScore ? m.averageScore / 10 : 0;
+      m._live  = m.status === "RELEASING" || m.status === "HIATUS";
+    });
+
+    let list = raw.filter(m =>
+      formats.includes(m.format) &&
+      m._votes >= minVotes &&
+      m._score > 0 &&
+      (statusMode === "any" ||
+       (statusMode === "finished" && m.status === "FINISHED") ||
+       (statusMode === "ongoing"  && m._live))
+    );
+
+    if (sortMode === "bayes") {
+      const C = list.reduce((s, m) => s + m._score, 0) / (list.length || 1);
+      const prior = Math.max(minVotes, 2000);
+      list.forEach(m => {
+        m._w = (m._votes / (m._votes + prior)) * m._score
+             + (prior / (m._votes + prior)) * C;
+      });
+      list.sort((a, b) => b._w - a._w);
+    } else if (sortMode === "votes") {
+      list.sort((a, b) => b._votes - a._votes);
+    } else {
+      list.sort((a, b) => b._score - a._score);
+    }
+
+    list = list.slice(0, 50);
+
+    if (!list.length) {
+      status.className = "status";
+      status.innerHTML = d.empty;
+      return;
+    }
+
+    lastResult = {list, year, genre, minVotes};
+    status.style.display = "none";
+    out.innerHTML = render(list, year, genre, minVotes);
+
+  } catch (err) {
+    status.style.display = "";
+    status.className = "status error";
+    status.textContent = err.message || d.netErr;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$("go").addEventListener("click", run);
+document.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+
+applyLang();
 </script>
-</body>
-</html>
